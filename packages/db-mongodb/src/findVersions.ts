@@ -1,7 +1,7 @@
 import type { PaginateOptions, QueryOptions } from 'mongoose'
 import type { FindVersions } from 'payload'
 
-import { buildVersionCollectionFields, flattenWhereToOperators } from 'payload'
+import { APIError, buildVersionCollectionFields, flattenWhereToOperators } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -12,10 +12,32 @@ import { sanitizeInternalFields } from './utilities/sanitizeInternalFields.js'
 
 export const findVersions: FindVersions = async function findVersions(
   this: MongooseAdapter,
-  { collection, limit, locale, page, pagination, req = {}, select, skip, sort: sortArg, where },
+  {
+    collection: collectionSlug,
+    limit,
+    locale,
+    page,
+    pagination,
+    req = {},
+    select,
+    skip,
+    sort: sortArg,
+    where = {},
+  },
 ) {
-  const Model = this.versions[collection]
-  const collectionConfig = this.payload.collections[collection].config
+  const Model = this.versions[collectionSlug]
+
+  if (!Model) {
+    throw new APIError(`Could not find collection ${collectionSlug} version Mongoose model`)
+  }
+
+  const collection = this.payload.collections[collectionSlug]
+
+  if (!collection) {
+    throw new APIError(`Could not find collection ${collectionSlug}`)
+  }
+
+  const collectionConfig = collection.config
   const session = await getSession(this, req)
   const options: QueryOptions = {
     limit,
@@ -88,10 +110,10 @@ export const findVersions: FindVersions = async function findVersions(
     }
   }
 
-  if (limit >= 0) {
+  if (limit && limit >= 0) {
     paginationOptions.limit = limit
     // limit must also be set here, it's ignored when pagination is false
-    paginationOptions.options.limit = limit
+    paginationOptions.options!.limit = limit
 
     // Disable pagination if limit is 0
     if (limit === 0) {
@@ -100,7 +122,7 @@ export const findVersions: FindVersions = async function findVersions(
   }
 
   const result = await Model.paginate(query, paginationOptions)
-  const docs = JSON.parse(JSON.stringify(result.docs))
+  const docs = JSON.parse(JSON.stringify(result.docs)) as any[]
 
   return {
     ...result,

@@ -1,7 +1,5 @@
-import type { CreateOptions } from 'mongoose'
-
 import { Types } from 'mongoose'
-import { buildVersionCollectionFields, type CreateVersion, type Document } from 'payload'
+import { APIError, buildVersionCollectionFields, type CreateVersion, type Document } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -23,7 +21,18 @@ export const createVersion: CreateVersion = async function createVersion(
   },
 ) {
   const VersionModel = this.versions[collectionSlug]
-  const options: CreateOptions = {
+
+  if (!VersionModel) {
+    throw new APIError(`Could not find collection ${collectionSlug} version Mongoose model`)
+  }
+
+  const collection = this.payload.collections[collectionSlug]
+
+  if (!collection) {
+    throw new APIError(`Could not find collection ${collectionSlug}`)
+  }
+
+  const options = {
     session: await getSession(this, req),
   }
 
@@ -39,10 +48,7 @@ export const createVersion: CreateVersion = async function createVersion(
       updatedAt,
       version: versionData,
     },
-    fields: buildVersionCollectionFields(
-      this.payload.config,
-      this.payload.collections[collectionSlug].config,
-    ),
+    fields: buildVersionCollectionFields(this.payload.config, collection.config),
   })
 
   const [doc] = await VersionModel.create([data], options, req)

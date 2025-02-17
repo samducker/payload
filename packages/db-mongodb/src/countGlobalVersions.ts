@@ -1,7 +1,7 @@
 import type { CountOptions } from 'mongodb'
 import type { CountGlobalVersions } from 'payload'
 
-import { flattenWhereToOperators } from 'payload'
+import { APIError, flattenWhereToOperators } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -9,11 +9,15 @@ import { getSession } from './utilities/getSession.js'
 
 export const countGlobalVersions: CountGlobalVersions = async function countGlobalVersions(
   this: MongooseAdapter,
-  { global, locale, req, where },
+  { global, locale, req, where = {} },
 ) {
   const Model = this.versions[global]
   const options: CountOptions = {
     session: await getSession(this, req),
+  }
+
+  if (!Model) {
+    throw new APIError(`Could not find global ${global} version Mongoose model`)
   }
 
   let hasNearConstraint = false

@@ -6,7 +6,7 @@ import { getLocalizedSortProperty } from './getLocalizedSortProperty.js'
 type Args = {
   config: SanitizedConfig
   fields: FlattenedField[]
-  locale: string
+  locale?: string
   sort: Sort
   timestamps: boolean
 }

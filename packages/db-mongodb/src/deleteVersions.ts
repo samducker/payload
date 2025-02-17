@@ -1,4 +1,4 @@
-import type { DeleteVersions } from 'payload'
+import { APIError, type DeleteVersions } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -9,6 +9,10 @@ export const deleteVersions: DeleteVersions = async function deleteVersions(
   { collection, locale, req, where },
 ) {
   const VersionsModel = this.versions[collection]
+
+  if (!VersionsModel) {
+    throw new APIError(`Could not find collection ${collection} version Mongoose model`)
+  }
 
   const session = await getSession(this, req)
 

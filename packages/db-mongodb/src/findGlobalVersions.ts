@@ -1,7 +1,7 @@
 import type { PaginateOptions, QueryOptions } from 'mongoose'
 import type { FindGlobalVersions } from 'payload'
 
-import { buildVersionGlobalFields, flattenWhereToOperators } from 'payload'
+import { APIError, buildVersionGlobalFields, flattenWhereToOperators } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -12,14 +12,23 @@ import { sanitizeInternalFields } from './utilities/sanitizeInternalFields.js'
 
 export const findGlobalVersions: FindGlobalVersions = async function findGlobalVersions(
   this: MongooseAdapter,
-  { global, limit, locale, page, pagination, req, select, skip, sort: sortArg, where },
+  { global: slug, limit, locale, page, pagination, req, select, skip, sort: sortArg, where = {} },
 ) {
-  const Model = this.versions[global]
-  const versionFields = buildVersionGlobalFields(
-    this.payload.config,
-    this.payload.globals.config.find(({ slug }) => slug === global),
-    true,
+  const Model = this.versions[slug]
+
+  if (!Model) {
+    throw new APIError(`Could not find global ${slug} version Mongoose model`)
+  }
+
+  const globalConfig = this.payload.config.globals.find(
+    (globalConfig) => globalConfig.slug === slug,
   )
+
+  if (!globalConfig) {
+    throw new APIError(`Could not find global with slug ${slug}`)
+  }
+
+  const versionFields = buildVersionGlobalFields(this.payload.config, globalConfig, true)
 
   const session = await getSession(this, req)
   const options: QueryOptions = {
@@ -47,7 +56,7 @@ export const findGlobalVersions: FindGlobalVersions = async function findGlobalV
   }
 
   const query = await Model.buildQuery({
-    globalSlug: global,
+    globalSlug: slug,
     locale,
     payload: this.payload,
     where,
@@ -90,10 +99,10 @@ export const findGlobalVersions: FindGlobalVersions = async function findGlobalV
     }
   }
 
-  if (limit >= 0) {
+  if (limit && limit >= 0) {
     paginationOptions.limit = limit
     // limit must also be set here, it's ignored when pagination is false
-    paginationOptions.options.limit = limit
+    paginationOptions.options!.limit = limit
 
     // Disable pagination if limit is 0
     if (limit === 0) {
@@ -102,7 +111,7 @@ export const findGlobalVersions: FindGlobalVersions = async function findGlobalV
   }
 
   const result = await Model.paginate(query, paginationOptions)
-  const docs = JSON.parse(JSON.stringify(result.docs))
+  const docs = JSON.parse(JSON.stringify(result.docs)) as any[]
 
   return {
     ...result,

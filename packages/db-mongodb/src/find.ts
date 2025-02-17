@@ -1,7 +1,7 @@
 import type { PaginateOptions } from 'mongoose'
 import type { Find } from 'payload'
 
-import { flattenWhereToOperators } from 'payload'
+import { APIError, flattenWhereToOperators } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -14,7 +14,7 @@ import { sanitizeInternalFields } from './utilities/sanitizeInternalFields.js'
 export const find: Find = async function find(
   this: MongooseAdapter,
   {
-    collection,
+    collection: collectionSlug,
     joins = {},
     limit = 0,
     locale,
@@ -24,11 +24,22 @@ export const find: Find = async function find(
     req,
     select,
     sort: sortArg,
-    where,
+    where = {},
   },
 ) {
-  const Model = this.collections[collection]
-  const collectionConfig = this.payload.collections[collection].config
+  const Model = this.collections[collectionSlug]
+
+  if (!Model) {
+    throw new APIError(`Could not find collection ${collectionSlug} Mongoose model`)
+  }
+
+  const collection = this.payload.collections[collectionSlug]
+
+  if (!collection) {
+    throw new APIError(`Could not find collection ${collectionSlug}`)
+  }
+
+  const collectionConfig = collection.config
 
   const session = await getSession(this, req)
 
@@ -105,7 +116,7 @@ export const find: Find = async function find(
   if (limit >= 0) {
     paginationOptions.limit = limit
     // limit must also be set here, it's ignored when pagination is false
-    paginationOptions.options.limit = limit
+    paginationOptions.options!.limit = limit
 
     // Disable pagination if limit is 0
     if (limit === 0) {
@@ -117,7 +128,7 @@ export const find: Find = async function find(
 
   const aggregate = await buildJoinAggregation({
     adapter: this,
-    collection,
+    collection: collectionSlug,
     collectionConfig,
     joins,
     locale,
@@ -130,7 +141,7 @@ export const find: Find = async function find(
     result = await Model.paginate(query, paginationOptions)
   }
 
-  const docs = JSON.parse(JSON.stringify(result.docs))
+  const docs = JSON.parse(JSON.stringify(result.docs)) as any[]
 
   return {
     ...result,

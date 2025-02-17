@@ -1,7 +1,7 @@
 import type { QueryOptions } from 'mongoose'
 import type { FindGlobal } from 'payload'
 
-import { combineQueries } from 'payload'
+import { APIError, combineQueries } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -11,14 +11,23 @@ import { sanitizeInternalFields } from './utilities/sanitizeInternalFields.js'
 
 export const findGlobal: FindGlobal = async function findGlobal(
   this: MongooseAdapter,
-  { slug, locale, req, select, where },
+  { slug, locale, req, select, where = {} },
 ) {
   const Model = this.globals
+
+  const globalConfig = this.payload.config.globals.find(
+    (globalConfig) => globalConfig.slug === slug,
+  )
+
+  if (!globalConfig) {
+    throw new APIError(`Could not find global with slug ${slug}`)
+  }
+
   const options: QueryOptions = {
     lean: true,
     select: buildProjectionFromSelect({
       adapter: this,
-      fields: this.payload.globals.config.find((each) => each.slug === slug).flattenedFields,
+      fields: globalConfig.flattenedFields,
       select,
     }),
     session: await getSession(this, req),

@@ -1,6 +1,6 @@
 import type { QueryOptions } from 'mongoose'
 
-import { buildVersionCollectionFields, type UpdateVersion } from 'payload'
+import { APIError, buildVersionCollectionFields, type UpdateVersion } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -10,14 +10,31 @@ import { sanitizeRelationshipIDs } from './utilities/sanitizeRelationshipIDs.js'
 
 export const updateVersion: UpdateVersion = async function updateVersion(
   this: MongooseAdapter,
-  { id, collection, locale, options: optionsArgs = {}, req, select, versionData, where },
+  {
+    id,
+    collection: collectionSlug,
+    locale,
+    options: optionsArgs = {},
+    req,
+    select,
+    versionData,
+    where,
+  },
 ) {
-  const VersionModel = this.versions[collection]
+  const VersionModel = this.versions[collectionSlug]
+
+  if (!VersionModel) {
+    throw new APIError(`Could not find collection ${collectionSlug} version Mongoose model`)
+  }
+
+  const collection = this.payload.collections[collectionSlug]
+
+  if (!collection) {
+    throw new APIError(`Could not find collection ${collectionSlug}`)
+  }
+
   const whereToUse = where || { id: { equals: id } }
-  const fields = buildVersionCollectionFields(
-    this.payload.config,
-    this.payload.collections[collection].config,
-  )
+  const fields = buildVersionCollectionFields(this.payload.config, collection.config)
 
   const options: QueryOptions = {
     ...optionsArgs,
@@ -25,11 +42,7 @@ export const updateVersion: UpdateVersion = async function updateVersion(
     new: true,
     projection: buildProjectionFromSelect({
       adapter: this,
-      fields: buildVersionCollectionFields(
-        this.payload.config,
-        this.payload.collections[collection].config,
-        true,
-      ),
+      fields: buildVersionCollectionFields(this.payload.config, collection.config, true),
       select,
     }),
     session: await getSession(this, req),

@@ -1,6 +1,11 @@
 import type { QueryOptions } from 'mongoose'
 
-import { buildVersionGlobalFields, type TypeWithID, type UpdateGlobalVersionArgs } from 'payload'
+import {
+  APIError,
+  buildVersionGlobalFields,
+  type TypeWithID,
+  type UpdateGlobalVersionArgs,
+} from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -22,10 +27,20 @@ export async function updateGlobalVersion<T extends TypeWithID>(
   }: UpdateGlobalVersionArgs<T>,
 ) {
   const VersionModel = this.versions[globalSlug]
+
+  if (!VersionModel) {
+    throw new APIError(`Could not find global ${globalSlug} version Mongoose model`)
+  }
+
+  const globalConfig = this.payload.config.globals.find((global) => global.slug === globalSlug)
+
+  if (!globalConfig) {
+    throw new APIError(`Could not find global with slug ${globalSlug}`)
+  }
+
   const whereToUse = where || { id: { equals: id } }
 
-  const currentGlobal = this.payload.config.globals.find((global) => global.slug === globalSlug)
-  const fields = buildVersionGlobalFields(this.payload.config, currentGlobal)
+  const fields = buildVersionGlobalFields(this.payload.config, globalConfig)
 
   const options: QueryOptions = {
     ...optionsArgs,
@@ -33,7 +48,7 @@ export async function updateGlobalVersion<T extends TypeWithID>(
     new: true,
     projection: buildProjectionFromSelect({
       adapter: this,
-      fields: buildVersionGlobalFields(this.payload.config, currentGlobal, true),
+      fields: buildVersionGlobalFields(this.payload.config, globalConfig, true),
       select,
     }),
     session: await getSession(this, req),

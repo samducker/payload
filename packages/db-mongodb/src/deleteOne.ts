@@ -1,5 +1,6 @@
 import type { QueryOptions } from 'mongoose'
-import type { DeleteOne, Document } from 'payload'
+
+import { APIError, type DeleteOne, type Document } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -9,13 +10,24 @@ import { sanitizeInternalFields } from './utilities/sanitizeInternalFields.js'
 
 export const deleteOne: DeleteOne = async function deleteOne(
   this: MongooseAdapter,
-  { collection, req, select, where },
+  { collection: collectionSlug, req, select, where },
 ) {
-  const Model = this.collections[collection]
+  const Model = this.collections[collectionSlug]
+
+  if (!Model) {
+    throw new APIError(`Could not find collection ${collectionSlug} Mongoose model`)
+  }
+
+  const collection = this.payload.collections[collectionSlug]
+
+  if (!collection) {
+    throw new APIError(`Could not find collection ${collectionSlug}`)
+  }
+
   const options: QueryOptions = {
     projection: buildProjectionFromSelect({
       adapter: this,
-      fields: this.payload.collections[collection].config.flattenedFields,
+      fields: collection.config.flattenedFields,
       select,
     }),
     session: await getSession(this, req),

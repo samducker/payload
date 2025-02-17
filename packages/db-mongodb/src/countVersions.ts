@@ -1,7 +1,7 @@
 import type { CountOptions } from 'mongodb'
 import type { CountVersions } from 'payload'
 
-import { flattenWhereToOperators } from 'payload'
+import { APIError, flattenWhereToOperators } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -9,9 +9,14 @@ import { getSession } from './utilities/getSession.js'
 
 export const countVersions: CountVersions = async function countVersions(
   this: MongooseAdapter,
-  { collection, locale, req, where },
+  { collection, locale, req, where = {} },
 ) {
   const Model = this.versions[collection]
+
+  if (!Model) {
+    throw new APIError(`Could not find collection ${collection} version Mongoose model`)
+  }
+
   const options: CountOptions = {
     session: await getSession(this, req),
   }

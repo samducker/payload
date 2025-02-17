@@ -1,5 +1,6 @@
 import type { AggregateOptions, QueryOptions } from 'mongoose'
-import type { Document, FindOne } from 'payload'
+
+import { APIError, type Document, type FindOne } from 'payload'
 
 import type { MongooseAdapter } from './index.js'
 
@@ -10,10 +11,21 @@ import { sanitizeInternalFields } from './utilities/sanitizeInternalFields.js'
 
 export const findOne: FindOne = async function findOne(
   this: MongooseAdapter,
-  { collection, joins, locale, req, select, where },
+  { collection: collectionSlug, joins, locale, req, select, where = {} },
 ) {
-  const Model = this.collections[collection]
-  const collectionConfig = this.payload.collections[collection].config
+  const Model = this.collections[collectionSlug]
+
+  if (!Model) {
+    throw new APIError(`Could not find collection ${collectionSlug} Mongoose model`)
+  }
+
+  const collection = this.payload.collections[collectionSlug]
+
+  if (!collection) {
+    throw new APIError(`Could not find collection ${collectionSlug}`)
+  }
+
+  const collectionConfig = collection.config
   const session = await getSession(this, req)
   const options: AggregateOptions & QueryOptions = {
     lean: true,
@@ -34,7 +46,7 @@ export const findOne: FindOne = async function findOne(
 
   const aggregate = await buildJoinAggregation({
     adapter: this,
-    collection,
+    collection: collectionSlug,
     collectionConfig,
     joins,
     limit: 1,
