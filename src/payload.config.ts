@@ -3,7 +3,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres' // database-adapter-im
 
 import sharp from 'sharp' // sharp-import
 import path from 'path'
-import { buildConfig, PayloadRequest } from 'payload'
+import { buildConfig, Config, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
@@ -16,7 +16,7 @@ import { Header } from './Header/config'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
-
+import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -72,6 +72,11 @@ export default buildConfig({
   globals: [Header, Footer],
   plugins: [
     ...plugins,
+    multiTenantPlugin<Config>({
+      collections: {
+        pages: {},
+      },
+    }),
     // storage-adapter-placeholder
   ],
   secret: process.env.PAYLOAD_SECRET,
