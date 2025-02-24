@@ -1,35 +1,6 @@
 version: '3'
 
 services:
-  payload:
-    image: node:18-alpine
-    ports:
-      - '4321:4321'
-    volumes:
-      - .:/home/node/app
-      - node_modules:/home/node/app/node_modules
-    working_dir: /home/node/app
-    command: >
-      sh -c "
-        corepack enable &&
-        corepack prepare pnpm@10.4.1 --activate &&
-        find /home/node/app/node_modules -mindepth 1 -delete &&
-        pnpm install &&
-        pnpm dev
-      "
-    environment:
-      NODE_ENV: development
-      NODE_OPTIONS: '--max-old-space-size=4096 --no-deprecation'
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 4G
-    depends_on:
-      - postgres
-    env_file:
-      - .env
-
   postgres:
     image: postgres:15-alpine
     ports:
@@ -48,4 +19,3 @@ services:
 
 volumes:
   postgres_data:
-  node_modules:

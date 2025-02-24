@@ -5,7 +5,6 @@ import { ValidationError } from 'payload'
 import { getUserTenantIDs } from '@/collections/Tenants/utilities/getUserTenantIDs'
 
 export const ensureUniqueUsername: FieldHook = async ({ data, originalDoc, req, value }) => {
-  // if value is unchanged, skip validation
   if (originalDoc.username === value) {
     return value
   }
@@ -20,7 +19,7 @@ export const ensureUniqueUsername: FieldHook = async ({ data, originalDoc, req, 
     where: {
       and: [
         {
-          'tenants.tenant': {
+          'tenants.id': {
             equals: tenantIDToMatch,
           },
         },

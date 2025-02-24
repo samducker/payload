@@ -3,7 +3,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres' // database-adapter-im
 
 import sharp from 'sharp' // sharp-import
 import path from 'path'
-import { buildConfig, PayloadRequest } from 'payload'
+import { buildConfig, PayloadRequest, User } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'

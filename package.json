@@ -18,6 +18,7 @@
     "reinstall": "cross-env NODE_OPTIONS=--no-deprecation rm -rf node_modules && rm pnpm-lock.yaml && pnpm --ignore-workspace install",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "pg:up": "docker-compose up -d",
+    "seed": "pnpm run payload migrate:fresh",
     "pg:down": "docker-compose down",
     "pg:build": "docker-compose up --build",
     "drizzle:studio": "drizzle-kit studio --port=8143"
@@ -51,14 +52,15 @@
     "next-sitemap": "4.2.3",
     "payload": "3.24.0",
     "payload-admin-bar": "1.0.6",
-    "pg": "^8.13.3",
+    "pg": "8.11.3",
     "prism-react-renderer": "2.4.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "7.45.4",
     "sharp": "0.32.6",
     "tailwind-merge": "2.6.0",
-    "tailwindcss-animate": "1.0.7"
+    "tailwindcss-animate": "1.0.7",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.0",
