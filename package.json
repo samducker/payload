@@ -19,7 +19,8 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "pg:up": "docker-compose up -d",
     "pg:down": "docker-compose down",
-    "pg:build": "docker-compose up --build"
+    "pg:build": "docker-compose up --build",
+    "drizzle:studio": "drizzle-kit studio --port=8143"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.24.0",
@@ -41,6 +42,8 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cross-env": "7.0.3",
+    "drizzle-kit": "^0.30.4",
+    "drizzle-orm": "^0.39.3",
     "geist": "1.3.1",
     "graphql": "16.10.0",
     "lucide-react": "0.378.0",
@@ -48,6 +51,7 @@
     "next-sitemap": "4.2.3",
     "payload": "3.24.0",
     "payload-admin-bar": "1.0.6",
+    "pg": "^8.13.3",
     "prism-react-renderer": "2.4.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -79,6 +83,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "sharp"
-    ]
+    ],
+    "overrides": {
+      "drizzle-orm": "0.39.3"
+    }
   }
 }

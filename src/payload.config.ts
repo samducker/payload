@@ -3,7 +3,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres' // database-adapter-im
 
 import sharp from 'sharp' // sharp-import
 import path from 'path'
-import { buildConfig, Config, PayloadRequest } from 'payload'
+import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
@@ -12,6 +12,7 @@ import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
+import { Config } from './payload-types'
 import { Header } from './Header/config'
 import { Tenants } from './collections/Tenants'
 import { plugins } from './plugins'
