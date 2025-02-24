@@ -63,6 +63,7 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URI,
+      port: 5432,
     },
   }),
   // database-adapter-config-end
