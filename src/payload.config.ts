@@ -13,10 +13,13 @@ import { Posts } from './collections/Posts'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
+import { Tenants } from './collections/Tenants'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
 import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
+import { isSuperAdmin } from './collections/Tenants/access/isSuperAdmin'
+import { getUserTenantIDs } from './collections/Tenants/utilities/getUserTenantIDs'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -67,7 +70,7 @@ export default buildConfig({
     },
   }),
   // database-adapter-config-end
-  collections: [Pages, Posts, Media, Categories, Users],
+  collections: [Pages, Posts, Media, Categories, Users, Tenants],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
   plugins: [
@@ -76,6 +79,21 @@ export default buildConfig({
       collections: {
         pages: {},
       },
+      tenantField: {
+        access: {
+          read: () => true,
+          update: ({ req }) => {
+            if (isSuperAdmin(req.user)) {
+              return true
+            }
+            return getUserTenantIDs(req.user).length > 0
+          },
+        },
+      },
+      tenantsArrayField: {
+        includeDefaultField: false,
+      },
+      userHasAccessToAllTenants: (user) => isSuperAdmin(user),
     }),
     // storage-adapter-placeholder
   ],
