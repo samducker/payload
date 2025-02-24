@@ -1,4 +1,4 @@
-import type { Tenant, User } from '../payload-types'
+import type { Tenant, User } from '@/payload-types'
 import { extractID } from './extractID'
 
 /**
@@ -11,12 +11,12 @@ export const getUserTenantIDs = (
   user: null | User,
   role?: NonNullable<User['tenants']>[number]['roles'][number],
 ): Tenant['id'][] => {
-  if (!user) {
+  if (!user || !user.tenants) {
     return []
   }
 
   return (
-    user?.tenants?.reduce<Tenant['id'][]>((acc, { roles, tenant }) => {
+    user.tenants.reduce<Tenant['id'][]>((acc, { roles, tenant }): Tenant['id'][] => {
       if (role && !roles.includes(role)) {
         return acc
       }

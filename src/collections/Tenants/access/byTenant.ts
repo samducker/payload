@@ -1,6 +1,6 @@
 import type { Access } from 'payload'
 
-import { isSuperAdmin } from '../../../access/isSuperAdmin'
+import { isSuperAdmin } from '@/collections/Tenants/access/isSuperAdmin'
 
 export const filterByTenantRead: Access = (args) => {
   // Allow public tenants to be read by anyone
@@ -30,7 +30,12 @@ export const canMutateTenant: Access = ({ req }) => {
         req.user?.tenants
           ?.map(({ roles, tenant }) =>
             roles?.includes('tenant-admin')
-              ? tenant && (typeof tenant === 'string' ? tenant : tenant.id)
+              ? tenant &&
+                (typeof tenant === 'string'
+                  ? tenant
+                  : typeof tenant === 'number'
+                    ? tenant
+                    : tenant.id)
               : null,
           )
           .filter(Boolean) || [],

@@ -50,11 +50,7 @@ export const externalUsersLogin: Endpoint = {
                   equals: username,
                 },
               },
-              {
-                'tenants.tenant': {
-                  equals: fullTenant.id,
-                },
-              },
+              ...(fullTenant?.id ? [{ 'tenants.id': { equals: fullTenant.id } }] : []),
             ],
           },
           {
@@ -64,11 +60,7 @@ export const externalUsersLogin: Endpoint = {
                   equals: username,
                 },
               },
-              {
-                'tenants.tenant': {
-                  equals: fullTenant.id,
-                },
-              },
+              ...(fullTenant?.id ? [{ 'tenants.id': { equals: fullTenant.id } }] : []),
             ],
           },
         ],
@@ -77,6 +69,10 @@ export const externalUsersLogin: Endpoint = {
 
     if (foundUser.totalDocs > 0) {
       try {
+        if (!foundUser.docs[0]) {
+          throw new APIError('User not found.', 400, null, true)
+        }
+
         const loginAttempt = await req.payload.login({
           collection: 'users',
           data: {
@@ -87,9 +83,7 @@ export const externalUsersLogin: Endpoint = {
         })
 
         if (loginAttempt?.token) {
-          const collection: Collection = (req.payload.collections as { [key: string]: Collection })[
-            'users'
-          ]
+          const collection: Collection = req.payload.collections['users']
           const cookie = generatePayloadCookie({
             collectionAuthConfig: collection.config.auth,
             cookiePrefix: req.payload.config.cookiePrefix,

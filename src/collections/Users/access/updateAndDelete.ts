@@ -24,7 +24,7 @@ export const updateAndDeleteAccess: Access = ({ req, id }) => {
    * from their own tenant in the tenants array.
    */
   return {
-    'tenants.tenant': {
+    'tenants.id': {
       in: getUserTenantIDs(user, 'tenant-admin'),
     },
   }

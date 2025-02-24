@@ -2,10 +2,12 @@ import type { User } from '@/payload-types'
 import type { Access, Where } from 'payload'
 
 import { parseCookies } from 'payload'
-
+import { z } from 'zod'
 import { isSuperAdmin } from '@/collections/Tenants/access/isSuperAdmin'
 import { getUserTenantIDs } from '@/collections/Tenants/utilities/getUserTenantIDs'
 import { isAccessingSelf } from './isAccessingSelf'
+
+const parseIntSchema = z.coerce.number()
 
 export const readAccess: Access<User> = ({ req, id }) => {
   if (!req?.user) {
@@ -22,11 +24,13 @@ export const readAccess: Access<User> = ({ req, id }) => {
   const adminTenantAccessIDs = getUserTenantIDs(req.user, 'tenant-admin')
 
   if (selectedTenant) {
+    const tryParseInt = parseIntSchema.safeParse(selectedTenant)
+    if (tryParseInt.success) return false
     // If it's a super admin, or they have access to the tenant ID set in cookie
-    const hasTenantAccess = adminTenantAccessIDs.some((id) => id === selectedTenant)
+    const hasTenantAccess = adminTenantAccessIDs.some((id) => id === tryParseInt.data)
     if (superAdmin || hasTenantAccess) {
       return {
-        'tenants.tenant': {
+        'tenants.id': {
           equals: selectedTenant,
         },
       }
@@ -45,7 +49,7 @@ export const readAccess: Access<User> = ({ req, id }) => {
         },
       },
       {
-        'tenants.tenant': {
+        'tenants.id': {
           in: adminTenantAccessIDs,
         },
       },
