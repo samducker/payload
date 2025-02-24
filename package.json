@@ -61,6 +61,7 @@
     "tailwindcss-animate": "1.0.7"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@eslint/eslintrc": "3.3.0",
     "@tailwindcss/typography": "0.5.16",
     "@types/escape-html": "1.0.4",
